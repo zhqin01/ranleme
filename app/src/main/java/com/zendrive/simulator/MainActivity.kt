@@ -32,6 +32,7 @@ import com.zendrive.simulator.services.SoundManager
 import com.zendrive.simulator.services.TtsSpeaker
 import com.zendrive.simulator.services.VibrationController
 import com.zendrive.simulator.ui.ZenDriveApp
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -130,20 +131,22 @@ class MainActivity : ComponentActivity() {
                         // 持久化行程记录
                         val order = engine.state.order
                         if (order != null && lastKnownLocation != null) {
-                            tripRepo.insert(
-                                TripRecord(
-                                    sceneTitle = engine.state.selectedScene.title,
-                                    passengerName = order.passengerName,
-                                    orderTitle = order.title,
-                                    startLat = order.pickup.latitude,
-                                    startLng = order.pickup.longitude,
-                                    endLat = order.destination.latitude,
-                                    endLng = order.destination.longitude,
-                                    estimatedDistanceMeters = order.pickup.distanceMetersTo(order.destination),
-                                    coinsEarned = 60,
-                                    completedAtMillis = System.currentTimeMillis()
+                            GlobalScope.launch(Dispatchers.IO) {
+                                tripRepo.insert(
+                                    TripRecord(
+                                        sceneTitle = engine.state.selectedScene.title,
+                                        passengerName = order.passengerName,
+                                        orderTitle = order.title,
+                                        startLat = order.pickup.latitude,
+                                        startLng = order.pickup.longitude,
+                                        endLat = order.destination.latitude,
+                                        endLng = order.destination.longitude,
+                                        estimatedDistanceMeters = order.pickup.distanceMetersTo(order.destination),
+                                        coinsEarned = 60,
+                                        completedAtMillis = System.currentTimeMillis()
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                     DriveStage.Complete -> {

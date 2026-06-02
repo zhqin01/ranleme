@@ -277,20 +277,38 @@ private fun OrderActionCard(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             // 距离指示
-            val distanceText = state.distanceToTargetMeters?.let {
+            val curDist = state.distanceToTargetMeters?.let {
                 if (it >= 1000) "%.1f km".format(it / 1000) else "${it.toInt()} m"
             } ?: "--"
 
+            val order = state.order
+            val destToPickup = order?.pickup?.distanceMetersTo(order.destination)
+
             Text(
-                state.order?.title ?: "准备出发",
+                order?.title ?: "准备出发",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
-            Text(
-                "目标距离 $distanceText",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
-            )
+
+            if (order != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    if (state.stage == DriveStage.Pickup || state.stage == DriveStage.WaitingPassenger) {
+                        Text("接人点 $curDist", style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
+                    } else {
+                        Text("接人点 ✓", style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF22C55E), fontWeight = FontWeight.Medium)
+                    }
+                    val destDist = destToPickup?.let {
+                        if (it >= 1000) "%.1f km".format(it / 1000) else "${it.toInt()} m"
+                    } ?: "--"
+                    Text("目的地 $destDist", style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f))
+                }
+            } else {
+                Text("目标距离 $curDist", style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f))
+            }
 
             Spacer(Modifier.height(2.dp))
 

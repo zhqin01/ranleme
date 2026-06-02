@@ -75,6 +75,9 @@ fun AmapView(
             val aMap = view.map ?: return@AndroidView
             setupMapOnce(aMap, view)
 
+            // 清除旧标记（保留定位蓝点）
+            aMap.clear()
+
             // 用户位置
             userLocation?.let { loc ->
                 val latLng = LatLng(loc.latitude, loc.longitude)
