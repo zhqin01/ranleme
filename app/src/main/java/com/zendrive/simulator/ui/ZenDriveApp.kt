@@ -66,6 +66,7 @@ fun ZenDriveApp(
     onSimBoarded: () -> Unit = {},
     onSimArrive: () -> Unit = {},
     onSimComplete: () -> Unit = {},
+    onAddCoins: (Int) -> Unit = {},
     onUnlockGarage: (String) -> Unit
 ) {
     val context = LocalContext.current
@@ -137,7 +138,8 @@ fun ZenDriveApp(
                     onSimToPickup = onSimToPickup,
                     onSimBoarded = onSimBoarded,
                     onSimArrive = onSimArrive,
-                    onSimComplete = onSimComplete
+                    onSimComplete = onSimComplete,
+                    onAddCoins = onAddCoins
                 )
                 Screen.History -> HistoryScreen(
                     onDelete = { id ->

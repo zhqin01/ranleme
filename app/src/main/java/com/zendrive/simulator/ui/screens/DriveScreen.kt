@@ -25,13 +25,19 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -195,7 +201,7 @@ private fun BottomControlPanel(
 
         // 管理员测试按钮
         if (isAdminMode) {
-            AdminTestButtons(state, onSimToPickup, onSimBoarded, onSimArrive, onSimComplete)
+            AdminTestPanel(state, onSimToPickup, onSimBoarded, onSimArrive, onSimComplete, onAddCoins = onAddCoins)
         }
 
         // 当前订单信息 + 操作按钮
@@ -384,16 +390,18 @@ private fun BubbleOrderList(
     }
 }
 
-// ── 管理员测试按钮 ──
+// ── 管理员测试面板 ──
 
 @Composable
-private fun AdminTestButtons(
+private fun AdminTestPanel(
     state: ZenDriveUiState,
     onSimToPickup: () -> Unit,
     onSimBoarded: () -> Unit,
     onSimArrive: () -> Unit,
-    onSimComplete: () -> Unit
+    onSimComplete: () -> Unit,
+    onAddCoins: (Int) -> Unit = {}
 ) {
+    var coinInput by remember { mutableStateOf("") }
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -401,11 +409,34 @@ private fun AdminTestButtons(
     ) {
         Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("🔧 管理员测试", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFE65100))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 TestBtn("到接人点", state.stage in listOf(DriveStage.Pickup, DriveStage.WaitingPassenger), onSimToPickup)
-                TestBtn("乘客上车", state.stage == DriveStage.WaitingPassenger, onSimBoarded)
+                TestBtn("上车", state.stage == DriveStage.WaitingPassenger, onSimBoarded)
                 TestBtn("到目的地", state.stage == DriveStage.Trip, onSimArrive)
-                TestBtn("一键完单", state.stage != DriveStage.Offline && state.stage != DriveStage.Complete, onSimComplete)
+                TestBtn("完单", state.stage != DriveStage.Offline && state.stage != DriveStage.Complete, onSimComplete)
+            }
+            // 金币修改
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("💰", fontSize = 14.sp)
+                OutlinedTextField(
+                    value = coinInput,
+                    onValueChange = { coinInput = it.filter { c -> c.isDigit() } },
+                    modifier = Modifier.weight(1f).height(40.dp),
+                    placeholder = { Text("输入金币数量", fontSize = 11.sp) },
+                    singleLine = true,
+                    textStyle = TextStyle(fontSize = 13.sp)
+                )
+                Button(
+                    onClick = {
+                        val amount = coinInput.toIntOrNull() ?: 0
+                        if (amount > 0) { onAddCoins(amount); coinInput = "" }
+                    },
+                    enabled = coinInput.isNotEmpty(),
+                    modifier = Modifier.height(38.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+                ) { Text("添加", fontSize = 12.sp) }
             }
         }
     }
@@ -417,7 +448,7 @@ private fun TestBtn(label: String, enabled: Boolean, onClick: () -> Unit) {
         onClick = onClick, enabled = enabled,
         modifier = Modifier.height(32.dp),
         shape = RoundedCornerShape(8.dp),
-        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800), disabledContainerColor = Color(0xFFFFE0B2))
     ) { Text(label, fontSize = 11.sp) }
 }

@@ -25,7 +25,9 @@ class AppPreferences(private val context: Context) {
         val FIRST_LAUNCH = booleanPreferencesKey("first_launch")
         val COINS = intPreferencesKey("coins")
         val ADMIN_MODE = booleanPreferencesKey("admin_mode")
-        val ORDER_MODE = stringPreferencesKey("order_mode")  // "auto" | "bubble"
+        val ORDER_MODE = stringPreferencesKey("order_mode")
+        val NICKNAME = stringPreferencesKey("nickname")
+        val BIO = stringPreferencesKey("bio")
     }
 
     val themeMode: Flow<String> = context.dataStore.data.map { it[THEME_MODE] ?: "auto" }
@@ -37,6 +39,16 @@ class AppPreferences(private val context: Context) {
     val coins: Flow<Int> = context.dataStore.data.map { it[COINS] ?: 0 }
     val isAdminMode: Flow<Boolean> = context.dataStore.data.map { it[ADMIN_MODE] ?: false }
     val orderMode: Flow<String> = context.dataStore.data.map { it[ORDER_MODE] ?: "auto" }
+    val nickname: Flow<String> = context.dataStore.data.map { it[NICKNAME] ?: "张师傅" }
+    val bio: Flow<String> = context.dataStore.data.map { it[BIO] ?: "跑了没 · 散心司机" }
+
+    suspend fun setNickname(value: String) {
+        context.dataStore.edit { it[NICKNAME] = value }
+    }
+
+    suspend fun setBio(value: String) {
+        context.dataStore.edit { it[BIO] = value }
+    }
 
     suspend fun addCoins(amount: Int) {
         context.dataStore.edit { prefs ->

@@ -217,6 +217,10 @@ class MainActivity : ComponentActivity() {
                     val app2 = application as App
                     GlobalScope.launch { app2.prefs.addCoins(60) }
                 },
+                onAddCoins = { amount ->
+                    val app = application as App
+                    GlobalScope.launch { app.prefs.addCoins(amount) }
+                },
                 onUnlockGarage = {
                     uiState = engine.unlockGarageItem(it)
                 }

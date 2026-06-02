@@ -61,6 +61,9 @@ fun AmapView(
         }
     }
 
+    // 首次定位 → 直接跳转（不用动画），后续位置用动画
+    var firstLocationSet = remember { false }
+
     AndroidView(
         factory = { mapView },
         modifier = modifier,
@@ -70,9 +73,13 @@ fun AmapView(
 
             // 用户位置
             userLocation?.let { loc ->
-                aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                    LatLng(loc.latitude, loc.longitude), 16f
-                ))
+                val latLng = LatLng(loc.latitude, loc.longitude)
+                if (!firstLocationSet) {
+                    firstLocationSet = true
+                    aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f))
+                } else {
+                    aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16f))
+                }
             }
 
             // 目标点
@@ -126,7 +133,7 @@ private fun setupMapOnce(aMap: AMap, mapView: MapView) {
         isZoomControlsEnabled = false
         isScrollGesturesEnabled = true
         isZoomGesturesEnabled = true
-        isMyLocationButtonEnabled = false
+        isMyLocationButtonEnabled = true
     }
 }
 
