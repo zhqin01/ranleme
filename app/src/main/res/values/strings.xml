@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">跑了没</string>
+    <string name="location_notification_channel">定位服务</string>
+    <string name="location_notification_title">正在运行</string>
+    <string name="location_notification_text">正在接单中，保持定位…</string>
+</resources>
