@@ -24,6 +24,7 @@ import com.zendrive.simulator.domain.TripRecord
 import com.zendrive.simulator.domain.VirtualOrder
 import com.zendrive.simulator.domain.ZenDriveEngine
 import com.amap.api.maps.model.LatLng
+import com.zendrive.simulator.map.AmapRouteUtil
 import com.zendrive.simulator.map.AmapView
 import com.zendrive.simulator.map.MapTarget
 import com.zendrive.simulator.services.LocationPublisher
@@ -83,8 +84,24 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            // 路线规划：TODO 单独修复 — 先禁用以保证地图稳定
-            // LaunchedEffect(uiState.stage, uiState.order) { ... }
+            // 路线规划：阶段切换时搜索路径
+            LaunchedEffect(uiState.stage, uiState.order) {
+                val order = uiState.order ?: return@LaunchedEffect
+                val loc = lastKnownLocation ?: return@LaunchedEffect
+                val target = when (uiState.stage) {
+                    DriveStage.Pickup -> order.pickup
+                    DriveStage.Trip -> order.destination
+                    else -> null
+                }
+                if (target != null) {
+                    try {
+                        val pts = AmapRouteUtil.searchDriveRoute(this@MainActivity, loc, target)
+                        if (pts.isNotEmpty()) routePoints = pts
+                    } catch (_: Exception) {}
+                } else {
+                    routePoints = emptyList()
+                }
+            }
 
             // 断开定位标记焦点
             DisposableEffect(Unit) {

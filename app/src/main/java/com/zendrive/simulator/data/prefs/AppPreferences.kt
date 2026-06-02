@@ -29,6 +29,8 @@ class AppPreferences(private val context: Context) {
         val NICKNAME = stringPreferencesKey("nickname")
         val BIO = stringPreferencesKey("bio")
         val AVATAR_EMOJI = stringPreferencesKey("avatar_emoji")
+        val SELECTED_FRAME = stringPreferencesKey("selected_frame")
+        val SELECTED_CAR = stringPreferencesKey("selected_car")
     }
 
     val themeMode: Flow<String> = context.dataStore.data.map { it[THEME_MODE] ?: "auto" }
@@ -43,6 +45,16 @@ class AppPreferences(private val context: Context) {
     val nickname: Flow<String> = context.dataStore.data.map { it[NICKNAME] ?: "张师傅" }
     val bio: Flow<String> = context.dataStore.data.map { it[BIO] ?: "跑了没 · 散心司机" }
     val avatarEmoji: Flow<String> = context.dataStore.data.map { it[AVATAR_EMOJI] ?: "🚗" }
+    val selectedFrame: Flow<String> = context.dataStore.data.map { it[SELECTED_FRAME] ?: "" }
+    val selectedCar: Flow<String> = context.dataStore.data.map { it[SELECTED_CAR] ?: "" }
+
+    suspend fun setSelectedFrame(value: String) {
+        context.dataStore.edit { it[SELECTED_FRAME] = value }
+    }
+
+    suspend fun setSelectedCar(value: String) {
+        context.dataStore.edit { it[SELECTED_CAR] = value }
+    }
 
     suspend fun setNickname(value: String) {
         context.dataStore.edit { it[NICKNAME] = value }
