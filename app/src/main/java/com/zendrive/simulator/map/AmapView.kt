@@ -20,6 +20,8 @@ import com.amap.api.maps.model.MyLocationStyle
 import com.zendrive.simulator.domain.GeoPoint
 import com.zendrive.simulator.domain.VirtualOrder
 
+private const val TAG_MAP_READY = "map_ready"
+
 sealed class MapTarget {
     data class Pickup(val point: GeoPoint) : MapTarget()
     data class Destination(val point: GeoPoint) : MapTarget()
@@ -63,58 +65,54 @@ fun AmapView(
         factory = { mapView },
         modifier = modifier,
         update = { view ->
-            view.map?.let { aMap ->
-                setupMapOnce(aMap)
+            val aMap = view.map ?: return@AndroidView
+            setupMapOnce(aMap, view)
 
-                // 用户位置
-                userLocation?.let { loc ->
-                    aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                        LatLng(loc.latitude, loc.longitude), 16f
-                    ))
+            // 用户位置
+            userLocation?.let { loc ->
+                aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                    LatLng(loc.latitude, loc.longitude), 16f
+                ))
+            }
+
+            // 目标点
+            when (target) {
+                is MapTarget.Pickup -> addMarker(aMap, target.point, "接人点", BitmapDescriptorFactory.HUE_GREEN)
+                is MapTarget.Destination -> addMarker(aMap, target.point, "目的地", BitmapDescriptorFactory.HUE_RED)
+                null -> {}
+            }
+
+            // 气泡订单
+            if (bubbleOrders.isNotEmpty()) {
+                val hues = listOf(BitmapDescriptorFactory.HUE_GREEN, BitmapDescriptorFactory.HUE_CYAN, BitmapDescriptorFactory.HUE_ORANGE, BitmapDescriptorFactory.HUE_ROSE)
+                bubbleOrders.forEachIndexed { i, order ->
+                    val m = aMap.addMarker(MarkerOptions()
+                        .position(LatLng(order.pickup.latitude, order.pickup.longitude))
+                        .title(order.title).snippet("${order.passengerName}")
+                        .icon(BitmapDescriptorFactory.defaultMarker(hues[i % hues.size])))
+                    m?.`object` = order
                 }
-
-                // 目标点
-                when (target) {
-                    is MapTarget.Pickup -> addMarker(aMap, target.point, "接人点", BitmapDescriptorFactory.HUE_GREEN)
-                    is MapTarget.Destination -> addMarker(aMap, target.point, "目的地", BitmapDescriptorFactory.HUE_RED)
-                    null -> {}
-                }
-
-                // 气泡订单
-                if (bubbleOrders.isNotEmpty()) {
-                    val hues = listOf(BitmapDescriptorFactory.HUE_GREEN, BitmapDescriptorFactory.HUE_CYAN, BitmapDescriptorFactory.HUE_ORANGE, BitmapDescriptorFactory.HUE_ROSE)
-                    bubbleOrders.forEachIndexed { i, order ->
-                        val m = view.map.addMarker(MarkerOptions()
-                            .position(LatLng(order.pickup.latitude, order.pickup.longitude))
-                            .title(order.title)
-                            .snippet("${order.passengerName}")
-                            .icon(BitmapDescriptorFactory.defaultMarker(hues[i % hues.size])))
-                        m?.`object` = order
-                    }
-                    onBubbleTapped?.let { cb ->
-                        aMap.setOnMarkerClickListener { marker ->
-                            val o = marker.`object` as? VirtualOrder
-                            if (o != null) { cb(o); true } else false
-                        }
+                onBubbleTapped?.let { cb ->
+                    aMap.setOnMarkerClickListener { marker ->
+                        val o = marker.`object` as? VirtualOrder
+                        if (o != null) { cb(o); true } else false
                     }
                 }
+            }
 
-                // 路线
-                if (routePoints.size >= 2) {
-                    aMap.addPolyline(com.amap.api.maps.model.PolylineOptions()
-                        .addAll(routePoints).width(12f)
-                        .color(Color.argb(200, 0, 140, 255)).zIndex(5f))
-                }
+            // 路线
+            if (routePoints.size >= 2) {
+                aMap.addPolyline(com.amap.api.maps.model.PolylineOptions()
+                    .addAll(routePoints).width(12f)
+                    .color(Color.argb(200, 0, 140, 255)).zIndex(5f))
             }
         }
     )
 }
 
-private var mapSetup = false
-
-private fun setupMapOnce(aMap: AMap) {
-    if (mapSetup) return
-    mapSetup = true
+private fun setupMapOnce(aMap: AMap, mapView: MapView) {
+    if (mapView.getTag() == TAG_MAP_READY) return
+    mapView.setTag(TAG_MAP_READY)
     val style = MyLocationStyle().apply {
         myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE_NO_CENTER)
         interval(2000)
