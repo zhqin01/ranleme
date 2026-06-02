@@ -28,6 +28,7 @@ class AppPreferences(private val context: Context) {
         val ORDER_MODE = stringPreferencesKey("order_mode")
         val NICKNAME = stringPreferencesKey("nickname")
         val BIO = stringPreferencesKey("bio")
+        val AVATAR_EMOJI = stringPreferencesKey("avatar_emoji")
     }
 
     val themeMode: Flow<String> = context.dataStore.data.map { it[THEME_MODE] ?: "auto" }
@@ -41,6 +42,7 @@ class AppPreferences(private val context: Context) {
     val orderMode: Flow<String> = context.dataStore.data.map { it[ORDER_MODE] ?: "auto" }
     val nickname: Flow<String> = context.dataStore.data.map { it[NICKNAME] ?: "张师傅" }
     val bio: Flow<String> = context.dataStore.data.map { it[BIO] ?: "跑了没 · 散心司机" }
+    val avatarEmoji: Flow<String> = context.dataStore.data.map { it[AVATAR_EMOJI] ?: "🚗" }
 
     suspend fun setNickname(value: String) {
         context.dataStore.edit { it[NICKNAME] = value }
@@ -48,6 +50,10 @@ class AppPreferences(private val context: Context) {
 
     suspend fun setBio(value: String) {
         context.dataStore.edit { it[BIO] = value }
+    }
+
+    suspend fun setAvatarEmoji(value: String) {
+        context.dataStore.edit { it[AVATAR_EMOJI] = value }
     }
 
     suspend fun addCoins(amount: Int) {

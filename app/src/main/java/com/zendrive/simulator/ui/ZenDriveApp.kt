@@ -40,6 +40,7 @@ import com.zendrive.simulator.ui.navigation.Screen
 import com.zendrive.simulator.ui.screens.DriveScreen
 import com.zendrive.simulator.ui.screens.GarageScreen
 import com.zendrive.simulator.ui.screens.HistoryScreen
+import com.zendrive.simulator.ui.screens.ProfileScreen
 import com.zendrive.simulator.ui.screens.SettingsScreen
 import com.zendrive.simulator.ui.screens.StatsScreen
 import com.zendrive.simulator.ui.theme.RanlemeTheme
@@ -72,6 +73,12 @@ fun ZenDriveApp(
     val context = LocalContext.current
     val app = context.applicationContext as App
     var selectedTab by remember { mutableStateOf<Screen>(Screen.Drive) }
+    var showProfile by remember { mutableStateOf(false) }
+
+    if (showProfile) {
+        ProfileScreen(onBack = { showProfile = false })
+        return
+    }
 
     RanlemeTheme {
         Scaffold(
@@ -150,7 +157,7 @@ fun ZenDriveApp(
                 )
                 Screen.Stats -> StatsScreen()
                 Screen.Garage -> GarageScreen()
-                Screen.Settings -> SettingsScreen()
+                Screen.Settings -> SettingsScreen(onProfileClick = { showProfile = true })
             }
             }
         }

@@ -1,6 +1,10 @@
 package com.zendrive.simulator.map
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -138,8 +142,41 @@ private fun setupMapOnce(aMap: AMap, mapView: MapView) {
 }
 
 private fun addMarker(aMap: AMap, point: GeoPoint, title: String, hue: Float) {
+    val icon = createBubbleBitmap(title, hue)
     val m = aMap.addMarker(MarkerOptions()
         .position(LatLng(point.latitude, point.longitude))
-        .title(title).icon(BitmapDescriptorFactory.defaultMarker(hue)))
+        .title(title).icon(BitmapDescriptorFactory.fromBitmap(icon))
+        .anchor(0.5f, 0.7f))
     m?.showInfoWindow()
+}
+
+private fun createBubbleBitmap(text: String, hue: Float): Bitmap {
+    val w = 160; val h = 80
+    val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+    val c = Canvas(bmp)
+    val bg = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    // 气泡背景色
+    bg.color = when {
+        hue >= 200f -> Color.rgb(255, 140, 60)   // 橙 Red
+        hue >= 100f -> Color.rgb(34, 197, 94)     // 绿
+        hue >= 60f  -> Color.rgb(59, 130, 246)    // 蓝
+        else        -> Color.rgb(168, 85, 247)    // 紫
+    }
+    bg.style = Paint.Style.FILL
+    c.drawRoundRect(RectF(0f, 0f, w.toFloat(), 60f), 16f, 16f, bg)
+
+    // 小三角
+    val tri = android.graphics.Path().apply {
+        moveTo(w/2f - 10f, 60f); lineTo(w/2f, 74f); lineTo(w/2f + 10f, 60f); close()
+    }
+    c.drawPath(tri, bg)
+
+    // 文字
+    val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE; textSize = 28f; isFakeBoldText = true; textAlign = Paint.Align.CENTER
+    }
+    c.drawText(text, w/2f, 38f, textPaint)
+
+    return bmp
 }

@@ -72,7 +72,8 @@ fun DriveScreen(
     onSimToPickup: () -> Unit = {},
     onSimBoarded: () -> Unit = {},
     onSimArrive: () -> Unit = {},
-    onSimComplete: () -> Unit = {}
+    onSimComplete: () -> Unit = {},
+    onAddCoins: (Int) -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         // 顶部状态栏
@@ -111,7 +112,8 @@ fun DriveScreen(
             onSimToPickup = onSimToPickup,
             onSimBoarded = onSimBoarded,
             onSimArrive = onSimArrive,
-            onSimComplete = onSimComplete
+            onSimComplete = onSimComplete,
+            onAddCoins = onAddCoins
         )
     }
 }
@@ -183,7 +185,8 @@ private fun BottomControlPanel(
     onSimToPickup: () -> Unit = {},
     onSimBoarded: () -> Unit = {},
     onSimArrive: () -> Unit = {},
-    onSimComplete: () -> Unit = {}
+    onSimComplete: () -> Unit = {},
+    onAddCoins: (Int) -> Unit = {}
 ) {
     Column(
         modifier = Modifier

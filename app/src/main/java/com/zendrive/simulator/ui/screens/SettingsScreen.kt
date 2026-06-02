@@ -57,7 +57,7 @@ import com.zendrive.simulator.App
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(onProfileClick: () -> Unit = {}) {
     val context = LocalContext.current
     val app = context.applicationContext as App
     val prefs = app.prefs
@@ -73,13 +73,9 @@ fun SettingsScreen() {
     var themeDialog by remember { mutableStateOf(false) }
     var orderModeDialog by remember { mutableStateOf(false) }
 
-    // 可编辑资料
     val nickname by prefs.nickname.collectAsState(initial = "张师傅")
     val bio by prefs.bio.collectAsState(initial = "跑了没 · 散心司机")
-    var editingName by remember { mutableStateOf(false) }
-    var editingBio by remember { mutableStateOf(false) }
-    var nameInput by remember { mutableStateOf(nickname) }
-    var bioInput by remember { mutableStateOf(bio) }
+    val avatarEmoji by prefs.avatarEmoji.collectAsState(initial = "🚗")
 
     Column(
         modifier = Modifier
@@ -94,9 +90,9 @@ fun SettingsScreen() {
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        // ── 头像区域 ──
+        // ── 头像区域（点击进入资料编辑页）──
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().clickable { onProfileClick() },
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -106,56 +102,13 @@ fun SettingsScreen() {
                     modifier = Modifier.size(56.dp).clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
-                ) { Text("🚗", fontSize = 28.sp) }
+                ) { Text(avatarEmoji, fontSize = 28.sp) }
                 Spacer(Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    if (editingName) {
-                        OutlinedTextField(
-                            value = nameInput,
-                            onValueChange = { nameInput = it },
-                            modifier = Modifier.fillMaxWidth().height(44.dp),
-                            singleLine = true,
-                            textStyle = MaterialTheme.typography.titleMedium
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            TextButton(onClick = {
-                                scope.launch { prefs.setNickname(nameInput) }
-                                editingName = false
-                            }) { Text("保存") }
-                            TextButton(onClick = { editingName = false; nameInput = nickname }) { Text("取消") }
-                        }
-                    } else {
-                        Text(
-                            nickname,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable { editingName = true; nameInput = nickname }
-                        )
-                    }
-                    if (editingBio) {
-                        OutlinedTextField(
-                            value = bioInput,
-                            onValueChange = { bioInput = it },
-                            modifier = Modifier.fillMaxWidth().height(44.dp),
-                            singleLine = true,
-                            textStyle = MaterialTheme.typography.bodySmall
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            TextButton(onClick = {
-                                scope.launch { prefs.setBio(bioInput) }
-                                editingBio = false
-                            }) { Text("保存") }
-                            TextButton(onClick = { editingBio = false; bioInput = bio }) { Text("取消") }
-                        }
-                    } else {
-                        Text(
-                            bio,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            modifier = Modifier.clickable { editingBio = true; bioInput = bio }
-                        )
-                    }
+                    Text(nickname, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(bio, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 }
+                Icon(Icons.Filled.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
             }
         }
 
