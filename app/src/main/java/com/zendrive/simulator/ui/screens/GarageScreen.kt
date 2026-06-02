@@ -29,6 +29,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.zendrive.simulator.App
 import com.zendrive.simulator.domain.GarageItem
 import com.zendrive.simulator.ui.theme.AlertOrange
@@ -52,7 +56,7 @@ fun GarageScreen() {
     val selectedFrame by app.prefs.selectedFrame.collectAsState(initial = "")
     val selectedCar by app.prefs.selectedCar.collectAsState(initial = "")
 
-    var activeTab by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(0) }
+    var activeTab by remember { mutableStateOf(0) }
     val tabs = listOf("头像框", "车标", "成就")
 
     val frameItems = state.items.filter { it.id.startsWith("frame_") }
