@@ -10,6 +10,7 @@ import com.zendrive.simulator.data.repository.TripRepository
 import com.amap.api.location.AMapLocationClient
 import com.amap.api.maps.MapsInitializer
 import com.zendrive.simulator.services.CrashLogger
+import com.zendrive.simulator.services.SoundManager
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -46,6 +47,11 @@ class App : Application() {
         }
 
         createNotificationChannel()
+    }
+
+    override fun onTerminate() {
+        super.onTerminate()
+        SoundManager.release()
     }
 
     private fun createNotificationChannel() {

@@ -13,7 +13,15 @@ object LocationPublisher {
     private val _location = MutableStateFlow<GeoPoint?>(null)
     val location: StateFlow<GeoPoint?> = _location.asStateFlow()
 
+    private val _status = MutableStateFlow("GPS 未锁定")
+    val status: StateFlow<String> = _status.asStateFlow()
+
     fun publish(point: GeoPoint) {
         _location.value = point
+        _status.value = "%.5f, %.5f".format(point.latitude, point.longitude)
+    }
+
+    fun publishStatus(status: String) {
+        _status.value = status
     }
 }

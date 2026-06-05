@@ -86,7 +86,7 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     // ── 高德 3D 地图 SDK（含定位+搜索） ──
-    implementation("com.amap.api:3dmap-location-search:latest.integration")
+    implementation("com.amap.api:3dmap-location-search:11.1.200_loc11.1.200_sea9.7.4")
 
     // ── Crash Logger（后续可替换为 Bugly） ──
     // 如需 Bugly: implementation("com.tencent.bugly:crashreport:latest.release")

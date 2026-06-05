@@ -7,6 +7,7 @@ import com.amap.api.services.route.DrivePath
 import com.amap.api.services.route.DriveRouteResult
 import com.amap.api.services.route.RouteSearch
 import com.zendrive.simulator.domain.GeoPoint
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
@@ -20,6 +21,7 @@ object AmapRouteUtil {
         val routeSearch = RouteSearch(context)
         routeSearch.setRouteSearchListener(object : RouteSearch.OnRouteSearchListener {
             override fun onDriveRouteSearched(result: DriveRouteResult?, code: Int) {
+                if (!cont.isActive) return
                 if (code == 1000 && result != null && result.paths.isNotEmpty()) {
                     val path: DrivePath = result.paths[0]
                     val points = path.steps.flatMap { step ->

@@ -9,8 +9,8 @@
 - 语言：Kotlin。
 - UI：Jetpack Compose。
 - 语音：仅使用 Android 原生 `TextToSpeech`，不打包本地音频。
-- 定位：优先使用 Android 原生 `LocationManager`，避免 Google Play Services 依赖。
-- 地图：MVP 不内嵌地图 SDK，仅保留路线状态与外部导航扩展位。
+- 定位：高德定位可用于配合地图 SDK；必须保留 Android 原生 `LocationManager` 兜底。定位失败不能静默吞掉，需要在 UI 暴露简短状态，便于手机实测排查。
+- 地图：允许轻量接入高德地图 SDK，用于原型内地图展示、定位和路线绘制；地图初始化失败、无网络、无定位或 SDK 异常时，必须降级到 Compose 绘制的路线占位图，保证按钮和主流程可用。
 - 体积：禁止加入大图片、视频、音频、字体包和重型图形库。
 
 ## 目录结构
@@ -20,6 +20,7 @@ app/src/main/java/com/zendrive/simulator/
   MainActivity.kt                 # 应用入口、权限、服务组装
   domain/                         # 纯业务状态机和数据模型
   services/                       # Android 原生能力封装
+  map/                            # 地图 SDK 封装与路线降级逻辑
   ui/                             # Compose 界面
 app/src/main/res/values/          # 主题、颜色、字符串
 ```

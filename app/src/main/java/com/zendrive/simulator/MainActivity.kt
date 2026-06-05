@@ -2,6 +2,7 @@ package com.zendrive.simulator
 
 import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -14,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zendrive.simulator.data.repository.GarageRepository
 import com.zendrive.simulator.data.repository.TripRepository
@@ -51,6 +53,8 @@ class MainActivity : ComponentActivity() {
                 || granted[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (locationGranted) {
             startLocationService()
+        } else {
+            LocationPublisher.publishStatus("缺少定位权限")
         }
     }
 
@@ -68,18 +72,17 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val location by LocationPublisher.location.collectAsState()
+            val locationStatus by LocationPublisher.status.collectAsState()
             val adminMode by app.prefs.isAdminMode.collectAsState(initial = false)
             val orderMode by app.prefs.orderMode.collectAsState(initial = "auto")
             var uiState by remember { mutableStateOf(engine.state) }
             var bubbleOrders by remember { mutableStateOf<List<VirtualOrder>>(emptyList()) }
             var routePoints by remember { mutableStateOf<List<LatLng>>(emptyList()) }
-            var locationText by remember { mutableStateOf("GPS 未锁定") }
 
             // 同步定位到引擎
             LaunchedEffect(location) {
                 location?.let { point ->
                     lastKnownLocation = point
-                    locationText = "%.5f, %.5f".format(point.latitude, point.longitude)
                     uiState = engine.updateLocation(point)
                 }
             }
@@ -147,22 +150,27 @@ class MainActivity : ComponentActivity() {
 
                         // 持久化行程记录
                         val order = engine.state.order
-                        if (order != null && lastKnownLocation != null) {
+                        val loc = lastKnownLocation
+                        if (order != null && loc != null) {
+                            val sceneTitle = engine.state.selectedScene.title
+                            val passengerName = order.passengerName
+                            val orderTitle = order.title
+                            val startLat = order.pickup.latitude
+                            val startLng = order.pickup.longitude
+                            val endLat = order.destination.latitude
+                            val endLng = order.destination.longitude
+                            val dist = order.pickup.distanceMetersTo(order.destination)
                             GlobalScope.launch(Dispatchers.IO) {
-                                tripRepo.insert(
-                                    TripRecord(
-                                        sceneTitle = engine.state.selectedScene.title,
-                                        passengerName = order.passengerName,
-                                        orderTitle = order.title,
-                                        startLat = order.pickup.latitude,
-                                        startLng = order.pickup.longitude,
-                                        endLat = order.destination.latitude,
-                                        endLng = order.destination.longitude,
-                                        estimatedDistanceMeters = order.pickup.distanceMetersTo(order.destination),
+                                try {
+                                    tripRepo.insert(TripRecord(
+                                        sceneTitle, passengerName, orderTitle,
+                                        startLat, startLng, endLat, endLng, dist,
                                         coinsEarned = 60,
                                         completedAtMillis = System.currentTimeMillis()
-                                    )
-                                )
+                                    ))
+                                } catch (_: Exception) {
+                                    CrashLogger.recordNonFatal(Exception("Failed to save trip record"))
+                                }
                             }
                         }
                     }
@@ -177,7 +185,7 @@ class MainActivity : ComponentActivity() {
 
             ZenDriveApp(
                 state = uiState,
-                locationText = locationText,
+                locationText = locationStatus,
                 currentLocation = location,
                 isAdminMode = adminMode,
                 orderMode = orderMode,
@@ -259,13 +267,29 @@ class MainActivity : ComponentActivity() {
         permissionLauncher.launch(permissions.toTypedArray())
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (hasLocationPermission()) {
+            startLocationService()
+        }
+    }
+
     private fun startLocationService() {
         val intent = Intent(this, LocationService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent)
-        } else {
-            startService(intent)
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+        }.onFailure {
+            LocationPublisher.publishStatus("定位服务启动失败")
         }
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
 
     override fun onDestroy() {

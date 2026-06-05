@@ -2,6 +2,7 @@ package com.zendrive.simulator.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,10 +11,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -75,18 +78,20 @@ fun DriveScreen(
     onSimComplete: () -> Unit = {},
     onAddCoins: (Int) -> Unit = {}
 ) {
+    val mapTarget = when (state.stage) {
+        DriveStage.Pickup, DriveStage.WaitingPassenger -> state.order?.pickup?.let { MapTarget.Pickup(it) }
+        DriveStage.Trip -> state.order?.destination?.let { MapTarget.Destination(it) }
+        else -> null
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        // 顶部状态栏
         TopStatusBar(state, locationText)
 
-        // 地图区（占据剩余空间）
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            val mapTarget = when (state.stage) {
-                DriveStage.Pickup, DriveStage.WaitingPassenger -> state.order?.pickup?.let { MapTarget.Pickup(it) }
-                DriveStage.Trip -> state.order?.destination?.let { MapTarget.Destination(it) }
-                else -> null
-            }
-
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
             AmapView(
                 modifier = Modifier.fillMaxSize(),
                 userLocation = currentLocation,
@@ -97,7 +102,6 @@ fun DriveScreen(
             )
         }
 
-        // 底部操作区（独立的 Compose 区域，不受地图触摸拦截）
         BottomControlPanel(
             state = state,
             isAdminMode = isAdminMode,
@@ -172,6 +176,7 @@ private fun TopStatusBar(
 
 @Composable
 private fun BottomControlPanel(
+    modifier: Modifier = Modifier,
     state: ZenDriveUiState,
     isAdminMode: Boolean = false,
     orderMode: String = "auto",
@@ -189,8 +194,10 @@ private fun BottomControlPanel(
     onAddCoins: (Int) -> Unit = {}
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .heightIn(max = 360.dp)
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {

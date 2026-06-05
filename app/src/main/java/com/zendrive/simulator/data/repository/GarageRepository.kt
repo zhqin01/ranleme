@@ -48,14 +48,14 @@ class GarageRepository(
         )
     }
 
+    @Synchronized
     suspend fun unlockItem(itemId: String): Boolean {
         val item = garageDao.getAll().firstOrNull { it.id == itemId } ?: return false
         if (item.unlocked) return false
-        val success = prefs.spendCoins(item.price)
-        if (success) {
-            garageDao.unlock(itemId)
-        }
-        return success
+        // 先扣金币，成功再解锁（避免金币扣了但解锁失败）
+        if (!prefs.spendCoins(item.price)) return false
+        garageDao.unlock(itemId)
+        return true
     }
 
     private fun GarageItem.toEntity() = GarageItemEntity(
